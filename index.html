@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.mymemory.translated.net https://api.openai.com; img-src 'self' data:;" />
+<title>XWX</title>
+<meta name="description" content="课堂实时语音转写 + 翻译 + AI 总结" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="titlebar">
+    <div class="titlebar-left">
+      <span class="breadcrumb"><span class="crumb-dim">实时记录</span> <span class="crumb-sep">&gt;</span> <span id="breadcrumbTime">2026-09-02 00:00:00</span></span>
+    </div>
+  </div>
+
+  <div class="app-body">
+    <div class="header-row">
+      <div class="header-left">
+        <h1 id="sessionTitle">2026-09-02 00:00:00</h1>
+        <div class="meta-row">
+          <span class="meta-item">
+            <svg class="meta-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+            <span id="sessionDate">2026-09-02 00:00</span>
+          </span>
+          <span class="meta-item">
+            <svg class="meta-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+            <span id="recordedLabel">未开始录制</span>
+          </span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-right-top">
+          <span class="engine-badge" id="engineBadge">免费识别</span>
+          <button class="icon-btn nav-btn" id="btnSettings" title="设置">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+        <label class="mic-label">选择麦克风</label>
+        <select id="micSelect" class="select-box"></select>
+      </div>
+    </div>
+
+    <div class="control-bar card">
+      <button class="record-dot" id="btnRecordToggle" title="开始/停止录制">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
+      </button>
+      <span class="timer" id="timerLabel">00:00:00</span>
+      <canvas id="waveform" width="360" height="36"></canvas>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="btnPause">
+        <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        <span id="pauseLabel">暂停</span>
+      </button>
+      <button class="btn btn-danger" id="btnEnd">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><rect x="9" y="9" width="6" height="6"/></svg>
+        结束录制
+      </button>
+    </div>
+
+    <div class="content-row">
+      <section class="panel card transcript-panel">
+        <div class="panel-header">
+          <h2>转写</h2>
+          <div class="lang-selects">
+            <div class="lang-group">
+              <label>说话人语言</label>
+              <select id="sourceLang" class="select-box"></select>
+            </div>
+            <div class="lang-group">
+              <label>翻译语言</label>
+              <select id="targetLang" class="select-box"></select>
+            </div>
+          </div>
+        </div>
+        <div id="transcriptList" class="transcript-list">
+          <div class="empty-state" id="transcriptEmpty">
+            点击左侧的录制按钮开始课堂实时转写与翻译
+          </div>
+        </div>
+      </section>
+
+      <section class="panel card summary-panel">
+        <div class="panel-header">
+          <h2><svg class="spark-icon" viewBox="0 0 24 24"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg> AI 总结
+            <span class="live-pulse" id="summaryLivePulse" hidden></span>
+          </h2>
+          <div class="summary-header-right">
+            <span class="summary-updated" id="summaryUpdated"></span>
+            <button class="btn btn-small" id="btnSummarize">生成总结</button>
+          </div>
+        </div>
+        <div id="summaryBody" class="summary-body">
+          <div class="empty-state">
+            暂无内容。录制并生成转写后可点击"生成总结"提取要点。<br/>
+            <span class="hint">已配置 OpenAI Key 时使用 AI 总结,未配置时使用规则摘要(可在右上角"设置"中配置)。</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="settingsOverlay" hidden>
+    <div class="modal card">
+      <div class="modal-header">
+        <h3>设置</h3>
+        <button class="icon-btn nav-btn" id="btnCloseSettings">
+          <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <label class="modal-label">OpenAI API Key</label>
+        <input type="password" id="apiKeyInput" class="text-input" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+        <p class="modal-hint">
+          注意:ChatGPT Pro 网页订阅不能直接调用接口,需要到
+          platform.openai.com/api-keys 单独创建一个 API Key,并在账户里开通按量付费额度
+          (与 ChatGPT 订阅是两套独立计费)。<br/>
+          填入 Key 后,识别使用 Whisper、翻译与 AI 总结使用 GPT-4o-mini,准确率和速度优于免费方案。
+          留空则自动使用浏览器内置的免费识别 + 规则摘要。<br/>
+          <strong>Key 只保存在你这台设备的浏览器本地存储中,不会上传到任何服务器</strong>(本站是纯静态页面,没有后端)。
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="btnClearKey">清除</button>
+          <button class="btn" id="btnSaveKey">保存</button>
+        </div>
+        <p class="modal-status" id="keyStatus"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
