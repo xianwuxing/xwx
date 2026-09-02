@@ -13,6 +13,8 @@
   --accent-soft: rgba(124, 147, 255, 0.14);
   --red: #ff6161;
   --red-soft: rgba(255, 97, 97, 0.14);
+  --green: #2ecc71;
+  --green-soft: rgba(46, 204, 113, 0.16);
 }
 
 html, body {
@@ -93,7 +95,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
 .control-bar { display: flex; align-items: center; gap: 18px; padding: 14px 20px; }
 .record-dot {
   width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
-  background: var(--red-soft); color: var(--red); display: flex; align-items: center; justify-content: center;
+  background: var(--green-soft); color: var(--green); display: flex; align-items: center; justify-content: center;
   transition: background 0.15s ease, transform 0.08s ease, box-shadow 0.2s ease;
 }
 .record-dot:hover { filter: brightness(1.1); }
