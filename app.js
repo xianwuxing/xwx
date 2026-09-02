@@ -193,6 +193,7 @@ const btnRecordToggle = document.getElementById('btnRecordToggle');
 const btnPause = document.getElementById('btnPause');
 const pauseLabel = document.getElementById('pauseLabel');
 const btnEnd = document.getElementById('btnEnd');
+const btnEndLabel = document.getElementById('btnEndLabel');
 
 /* ---------- Waveform ---------- */
 const canvas = document.getElementById('waveform');
@@ -783,6 +784,8 @@ async function startRecording() {
   }
 
   btnRecordToggle.classList.add('active');
+  btnEnd.classList.add('recording');
+  btnEndLabel.textContent = '结束录制';
   sourceLangSelect.disabled = true;
   micSelect.disabled = true;
 }
@@ -810,6 +813,8 @@ function stopRecording() {
   renderInterim('');
 
   btnRecordToggle.classList.remove('active');
+  btnEnd.classList.remove('recording');
+  btnEndLabel.textContent = '开始录制';
   pauseLabel.textContent = '暂停';
   btnPause.classList.remove('active');
   sourceLangSelect.disabled = false;
@@ -929,7 +934,11 @@ async function saveSessionToDisk() {
 }
 
 btnEnd.addEventListener('click', async () => {
-  if (isRecording) stopRecording();
-  await generateSummary();
-  await saveSessionToDisk();
+  if (isRecording) {
+    stopRecording();
+    await generateSummary();
+    await saveSessionToDisk();
+  } else {
+    startRecording();
+  }
 });
