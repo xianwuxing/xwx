@@ -3,134 +3,141 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://api.mymemory.translated.net https://api.openai.com; img-src 'self' data:;" />
-<title>XWX</title>
-<meta name="description" content="课堂实时语音转写 + 翻译 + AI 总结" />
-<link rel="stylesheet" href="styles.css" />
+<title>XWX — 课堂实时翻译</title>
+<meta name="description" content="课堂实时语音转写 + 翻译 + AI 总结。网页打开即用,或下载 Windows 客户端。" />
+<link rel="stylesheet" href="landing.css" />
 </head>
 <body>
-  <div class="titlebar">
-    <div class="titlebar-left">
-      <span class="breadcrumb"><span class="crumb-dim">实时记录</span> <span class="crumb-sep">&gt;</span> <span id="breadcrumbTime">2026-09-02 00:00:00</span></span>
+  <header class="nav">
+    <div class="nav-inner">
+      <div class="nav-brand">XWX</div>
+      <nav class="nav-links">
+        <a href="#features">功能</a>
+        <a href="#how">使用方式</a>
+        <a href="#download">下载</a>
+        <a href="https://github.com/xianwuxing/xwx" target="_blank" rel="noopener">GitHub</a>
+      </nav>
     </div>
-  </div>
+  </header>
 
-  <div class="app-body">
-    <div class="header-row">
-      <div class="header-left">
-        <h1 id="sessionTitle">2026-09-02 00:00:00</h1>
-        <div class="meta-row">
-          <span class="meta-item">
-            <svg class="meta-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
-            <span id="sessionDate">2026-09-02 00:00</span>
-          </span>
-          <span class="meta-item">
-            <svg class="meta-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-            <span id="recordedLabel">未开始录制</span>
-          </span>
-        </div>
+  <main>
+    <section class="hero">
+      <span class="eyebrow">课堂实时翻译工具</span>
+      <h1>把课堂说的每一句话,<br />实时转写、翻译、总结。</h1>
+      <p class="hero-sub">
+        面向课堂场景的语音转写与翻译工具。听到什么就转写什么,同步翻译成你需要的语言,
+        AI 边听边总结要点。网页打开即用,或安装 Windows 桌面客户端。
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="app/">在线使用 →</a>
+        <a class="btn btn-secondary" href="#download">下载 Windows 客户端</a>
       </div>
-      <div class="header-right">
-        <div class="header-right-top">
-          <span class="engine-badge" id="engineBadge">免费识别</span>
-          <button class="icon-btn nav-btn" id="btnSettings" title="设置">
-            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>
-          </button>
+      <p class="hero-note">网页版无需安装,打开即用 · 桌面版一键安装,离线打开也能启动</p>
+
+      <div class="hero-shot" aria-hidden="true">
+        <div class="mock-titlebar">
+          <span class="mock-dot" style="background:#7c93ff"></span>
+          <span class="mock-crumb"></span>
         </div>
-        <label class="mic-label">选择麦克风</label>
-        <select id="micSelect" class="select-box"></select>
-      </div>
-    </div>
-
-    <div class="control-bar card">
-      <button class="record-dot" id="btnRecordToggle" title="开始/停止录制">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg>
-      </button>
-      <span class="timer" id="timerLabel">00:00:00</span>
-      <canvas id="waveform" width="360" height="36"></canvas>
-      <div class="spacer"></div>
-      <button class="btn btn-ghost" id="btnPause">
-        <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-        <span id="pauseLabel">暂停</span>
-      </button>
-      <button class="btn btn-record" id="btnEnd">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><rect x="9" y="9" width="6" height="6"/></svg>
-        <span id="btnEndLabel">开始录制</span>
-      </button>
-    </div>
-
-    <div class="content-row">
-      <section class="panel card transcript-panel">
-        <div class="panel-header">
-          <h2>转写</h2>
-          <div class="lang-selects">
-            <div class="lang-group">
-              <label>说话人语言</label>
-              <select id="sourceLang" class="select-box"></select>
-            </div>
-            <div class="lang-group">
-              <label>翻译语言</label>
-              <select id="targetLang" class="select-box"></select>
-            </div>
+        <div class="mock-controlbar">
+          <span class="mock-record"></span>
+          <span class="mock-bar" style="width:38%"></span>
+        </div>
+        <div class="mock-panels">
+          <div class="mock-panel">
+            <span class="mock-line" style="width:30%"></span>
+            <span class="mock-line" style="width:85%"></span>
+            <span class="mock-line dim" style="width:70%"></span>
+            <span class="mock-line" style="width:92%"></span>
+            <span class="mock-line dim" style="width:60%"></span>
+            <span class="mock-line" style="width:78%"></span>
+            <span class="mock-line dim" style="width:50%"></span>
+          </div>
+          <div class="mock-panel">
+            <span class="mock-line" style="width:40%"></span>
+            <span class="mock-line dim" style="width:95%"></span>
+            <span class="mock-line dim" style="width:80%"></span>
+            <span class="mock-line dim" style="width:88%"></span>
           </div>
         </div>
-        <div id="transcriptList" class="transcript-list">
-          <div class="empty-state" id="transcriptEmpty">
-            点击左侧的录制按钮开始课堂实时转写与翻译
-          </div>
-        </div>
-      </section>
-
-      <section class="panel card summary-panel">
-        <div class="panel-header">
-          <h2><svg class="spark-icon" viewBox="0 0 24 24"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg> AI 总结
-            <span class="live-pulse" id="summaryLivePulse" hidden></span>
-          </h2>
-          <div class="summary-header-right">
-            <span class="summary-updated" id="summaryUpdated"></span>
-            <button class="btn btn-small" id="btnSummarize">生成总结</button>
-          </div>
-        </div>
-        <div id="summaryBody" class="summary-body">
-          <div class="empty-state">
-            暂无内容。录制并生成转写后可点击"生成总结"提取要点。<br/>
-            <span class="hint">已配置 OpenAI Key 时使用 AI 总结,未配置时使用规则摘要(可在右上角"设置"中配置)。</span>
-          </div>
-        </div>
-      </section>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="settingsOverlay" hidden>
-    <div class="modal card">
-      <div class="modal-header">
-        <h3>设置</h3>
-        <button class="icon-btn nav-btn" id="btnCloseSettings">
-          <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
-        </button>
       </div>
-      <div class="modal-body">
-        <label class="modal-label">OpenAI API Key</label>
-        <input type="password" id="apiKeyInput" class="text-input" placeholder="sk-..." autocomplete="off" spellcheck="false" />
-        <p class="modal-hint">
-          注意:ChatGPT Pro 网页订阅不能直接调用接口,需要到
-          platform.openai.com/api-keys 单独创建一个 API Key,并在账户里开通按量付费额度
-          (与 ChatGPT 订阅是两套独立计费)。<br/>
-          填入 Key 后,识别使用 Whisper、翻译与 AI 总结使用 GPT-4o-mini,准确率和速度优于免费方案。
-          留空则自动使用浏览器内置的免费识别 + 规则摘要。<br/>
-          <strong>Key 只保存在你这台设备的浏览器本地存储中,不会上传到任何服务器</strong>(本站是纯静态页面,没有后端)。
-        </p>
-        <div class="modal-actions">
-          <button class="btn btn-ghost" id="btnClearKey">清除</button>
-          <button class="btn" id="btnSaveKey">保存</button>
+    </section>
+
+    <section class="features" id="features">
+      <h2>核心能力</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          </div>
+          <h3>实时语音转写</h3>
+          <p>说话即转写,支持中/英/日/韩/法/德/西/俄等多语言识别。</p>
         </div>
-        <p class="modal-status" id="keyStatus"></p>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M5 8h9M9 5v3M13 8a12 12 0 0 1-8 9M6 12a15 15 0 0 0 9 5"/><path d="M15 21l4-9 4 9M16.5 18h5"/></svg>
+          </div>
+          <h3>同步翻译</h3>
+          <p>识别的同时自动翻译成目标语言,转写与译文逐条对照展示。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2l1.8 5.2L19 9l-5.2 1.8L12 16l-1.8-5.2L5 9l5.2-1.8z"/></svg>
+          </div>
+          <h3>AI 总结实时跟随</h3>
+          <p>录制过程中总结持续刷新,结束时自动生成一份完整要点总结。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>
+          </div>
+          <h3>一键本地保存</h3>
+          <p>结束录制自动导出转写、翻译与总结为 .md / .json 文件,方便后续整理。</p>
+        </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="toast" id="toast" hidden></div>
+    <section class="how" id="how">
+      <h2>三步开始使用</h2>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">1</span>
+          <h3>打开或安装</h3>
+          <p>直接打开网页版,或下载 Windows 客户端安装。</p>
+        </div>
+        <div class="step">
+          <span class="step-num">2</span>
+          <h3>(可选)配置 AI</h3>
+          <p>不填 Key 用免费识别;填入 OpenAI Key 后识别与总结准确率更高。</p>
+        </div>
+        <div class="step">
+          <span class="step-num">3</span>
+          <h3>开始录制</h3>
+          <p>点击录制按钮,课堂内容实时转写、翻译、总结,结束时自动保存。</p>
+        </div>
+      </div>
+    </section>
 
-  <script src="app.js"></script>
+    <section class="download" id="download">
+      <h2>下载</h2>
+      <div class="download-cards">
+        <div class="download-card">
+          <h3>网页版</h3>
+          <p>无需安装,任意设备打开即用。免费识别引擎依赖浏览器(建议 Chrome / Edge)。</p>
+          <a class="btn btn-primary" href="app/">在线打开 →</a>
+        </div>
+        <div class="download-card">
+          <h3>Windows 客户端</h3>
+          <p>独立桌面应用,一键安装。当前版本 v1.0.0。</p>
+          <a class="btn btn-secondary" href="https://github.com/xianwuxing/xwx/releases/download/v1.0.0/XWX.Setup.1.0.0.exe">下载安装包(.exe)→</a>
+          <p class="download-hint">未做代码签名,安装时 Windows 可能提示"未知发布者",选择"更多信息 → 仍要运行"继续安装。</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>XWX · 开源于 <a href="https://github.com/xianwuxing/xwx" target="_blank" rel="noopener">GitHub</a></span>
+  </footer>
 </body>
 </html>
