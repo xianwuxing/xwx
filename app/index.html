@@ -38,7 +38,7 @@
           </button>
         </div>
         <label class="mic-label">选择麦克风</label>
-        <select id="micSelect" class="select-box"></select>
+        <select id="micSelect" class="select-box"><option value="">系统默认麦克风</option></select>
       </div>
     </div>
 
@@ -49,7 +49,7 @@
       <span class="timer" id="timerLabel">00:00:00</span>
       <canvas id="waveform" width="360" height="36"></canvas>
       <div class="spacer"></div>
-      <button class="btn btn-ghost" id="btnPause">
+      <button class="btn btn-ghost" id="btnPause" disabled>
         <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
         <span id="pauseLabel">暂停</span>
       </button>

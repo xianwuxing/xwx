@@ -140,7 +140,18 @@ async function populateMicList() {
     console.error('mic enumeration failed', err);
   }
 }
-populateMicList();
+
+// Don't request mic permission until the user actually touches the picker
+// (or starts recording) — asking on page load is unsolicited and, if denied,
+// leaves the dropdown permanently stuck on an error with no way to retry.
+let micListLoaded = false;
+function ensureMicList() {
+  if (micListLoaded) return;
+  micListLoaded = true;
+  populateMicList();
+}
+micSelect.addEventListener('mousedown', ensureMicList);
+micSelect.addEventListener('focus', ensureMicList);
 
 /* ---------- Header date/time ---------- */
 function formatDateTime(d) {
@@ -462,13 +473,26 @@ let openaiFatalError = false;
 
 async function segmentLoop(stream, mimeType) {
   segmentLoopActive = true;
+  let consecutiveFailures = 0;
   while (isRecording && activeEngine === 'openai' && !isPaused && !openaiFatalError) {
     let blob;
     try {
       blob = await recordSegment(stream, SEGMENT_MS, mimeType);
+      consecutiveFailures = 0;
     } catch (err) {
+      // MediaRecorder can transiently fail to start right after a pause/resume
+      // (the previous recorder hasn't fully released the stream yet). A single
+      // failure shouldn't permanently kill the rest of the session — retry with
+      // a short backoff, and only give up after repeated failures.
       console.error('segment recording failed', err);
-      break;
+      consecutiveFailures++;
+      if (consecutiveFailures >= 5) {
+        showEmptyMessage('录音组件连续多次启动失败,已停止录制。请检查麦克风是否被其他程序占用后重试。');
+        stopRecording();
+        break;
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      continue;
     }
     if (!isRecording || activeEngine !== 'openai' || openaiFatalError) break;
     if (blob.size > 1000) {
@@ -744,9 +768,14 @@ btnSummarize.addEventListener('click', generateSummary);
 
 async function startRecording() {
   const useOpenAI = !!apiKey;
+  ensureMicList(); // populate device labels now that a permission prompt is expected
 
   if (!useOpenAI && !SpeechRecognitionCtor) {
     showEmptyMessage('当前浏览器不支持语音识别,请使用 Chrome 或 Edge 打开本页面,或在设置中填入 OpenAI API Key 改用云端识别。');
+    return;
+  }
+  if (useOpenAI && !window.MediaRecorder) {
+    showEmptyMessage('当前浏览器不支持 MediaRecorder,无法使用 OpenAI 云端识别。请使用较新版本的 Chrome / Edge。');
     return;
   }
 
@@ -786,6 +815,7 @@ async function startRecording() {
   btnRecordToggle.classList.add('active');
   btnEnd.classList.add('recording');
   btnEndLabel.textContent = '结束录制';
+  btnPause.disabled = false;
   sourceLangSelect.disabled = true;
   micSelect.disabled = true;
 }
@@ -817,6 +847,7 @@ function stopRecording() {
   btnEndLabel.textContent = '开始录制';
   pauseLabel.textContent = '暂停';
   btnPause.classList.remove('active');
+  btnPause.disabled = true;
   sourceLangSelect.disabled = false;
   micSelect.disabled = false;
 }
