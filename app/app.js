@@ -113,6 +113,79 @@ btnClearKey.addEventListener('click', () => {
   keyStatus.textContent = '已清除,将使用浏览器内置免费识别。';
 });
 
+/* ---------- Save location (File System Access API, Chrome/Edge only) ----------
+   localStorage can't hold a directory handle, so the handle itself is kept in
+   a tiny IndexedDB store; permission on it is re-checked (and re-requested)
+   each time we actually write, since browsers can revoke it silently. */
+const supportsDirPicker = 'showDirectoryPicker' in window;
+let saveDirHandle = null;
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('xwx-fs', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbGet(key) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readonly');
+    const req = tx.objectStore('handles').get(key);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSet(key, value) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('handles', 'readwrite');
+    tx.objectStore('handles').put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+const savePathDisplay = document.getElementById('savePathDisplay');
+const btnChooseSaveDir = document.getElementById('btnChooseSaveDir');
+const saveDirUnsupportedHint = document.getElementById('saveDirUnsupportedHint');
+
+function updateSavePathDisplay() {
+  savePathDisplay.textContent = saveDirHandle
+    ? `已选择:${saveDirHandle.name}`
+    : '未设置(默认下载到"下载"文件夹)';
+  savePathDisplay.title = savePathDisplay.textContent;
+}
+
+if (!supportsDirPicker) {
+  saveDirUnsupportedHint.hidden = false;
+  btnChooseSaveDir.disabled = true;
+} else {
+  idbGet('saveDir').then((handle) => {
+    if (handle) {
+      saveDirHandle = handle;
+      updateSavePathDisplay();
+    }
+  }).catch((err) => console.warn('load saved dir handle failed', err));
+}
+
+btnChooseSaveDir.addEventListener('click', async () => {
+  try {
+    const handle = await window.showDirectoryPicker();
+    const perm = await handle.requestPermission({ mode: 'readwrite' });
+    if (perm !== 'granted') {
+      showToast('未获得该文件夹的写入权限。');
+      return;
+    }
+    saveDirHandle = handle;
+    await idbSet('saveDir', handle);
+    updateSavePathDisplay();
+  } catch (err) {
+    if (err.name !== 'AbortError') console.error('choose save dir failed', err);
+  }
+});
+
 /* ---------- Mic device list ---------- */
 const micSelect = document.getElementById('micSelect');
 
@@ -954,6 +1027,21 @@ async function saveSessionToDisk() {
     summary: lastSummaryResult,
     entries: transcriptEntries,
   };
+  if (saveDirHandle) {
+    try {
+      let perm = await saveDirHandle.queryPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') perm = await saveDirHandle.requestPermission({ mode: 'readwrite' });
+      if (perm === 'granted') {
+        await writeToDirHandle(`${fileBase}.md`, markdown);
+        await writeToDirHandle(`${fileBase}.json`, JSON.stringify(json, null, 2));
+        showToast(`已保存到 "${saveDirHandle.name}" 文件夹(.md 和 .json 各一份)`);
+        return;
+      }
+      showToast('保存文件夹权限已失效,改为下载到默认"下载"文件夹。');
+    } catch (err) {
+      console.error('write to save dir failed, falling back to download', err);
+    }
+  }
   try {
     downloadFile(`${fileBase}.md`, markdown, 'text/markdown');
     downloadFile(`${fileBase}.json`, JSON.stringify(json, null, 2), 'application/json');
@@ -962,6 +1050,13 @@ async function saveSessionToDisk() {
     console.error('save session failed', err);
     showToast('下载失败,请检查浏览器下载权限设置。');
   }
+}
+
+async function writeToDirHandle(filename, content) {
+  const fileHandle = await saveDirHandle.getFileHandle(filename, { create: true });
+  const writable = await fileHandle.createWritable();
+  await writable.write(content);
+  await writable.close();
 }
 
 /* ---------- Save confirmation (asks before downloading) ---------- */

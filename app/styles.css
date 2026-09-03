@@ -83,6 +83,12 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 .modal-status { font-size: 12px; margin-top: 10px; color: var(--accent); min-height: 16px; }
 
+.save-path-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--card-bg-2); border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px;
+}
+.save-path-text { font-size: 12.5px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .select-box {
   border: 1px solid var(--border); background: var(--card-bg-2); border-radius: 9px;
   padding: 8px 11px; font-size: 13px; color: var(--text); cursor: pointer; outline: none;

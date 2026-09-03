@@ -125,6 +125,15 @@
           <button class="btn" id="btnSaveKey">保存</button>
         </div>
         <p class="modal-status" id="keyStatus"></p>
+
+        <label class="modal-label" style="margin-top: 22px;">本地保存位置</label>
+        <div class="save-path-row">
+          <span class="save-path-text" id="savePathDisplay">未设置(默认下载到"下载"文件夹)</span>
+          <button class="btn btn-ghost btn-small" id="btnChooseSaveDir">选择文件夹</button>
+        </div>
+        <p class="modal-hint" id="saveDirUnsupportedHint" hidden>
+          当前浏览器不支持选择保存文件夹(需要 Chrome / Edge),将始终下载到默认"下载"文件夹。
+        </p>
       </div>
     </div>
   </div>
