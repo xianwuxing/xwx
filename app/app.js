@@ -933,11 +933,37 @@ async function saveSessionToDisk() {
   }
 }
 
+/* ---------- Save confirmation (asks before downloading) ---------- */
+const saveConfirmOverlay = document.getElementById('saveConfirmOverlay');
+const saveConfirmSummary = document.getElementById('saveConfirmSummary');
+const btnCloseSaveConfirm = document.getElementById('btnCloseSaveConfirm');
+const btnSkipSave = document.getElementById('btnSkipSave');
+const btnConfirmSave = document.getElementById('btnConfirmSave');
+
+function openSaveConfirm() {
+  const summaryNote = lastSummaryResult ? ',已生成 AI 总结' : '';
+  saveConfirmSummary.textContent = `本次录制共 ${transcriptEntries.length} 条转写记录${summaryNote}。是否下载为 .md / .json 文件到本地?`;
+  saveConfirmOverlay.hidden = false;
+}
+function closeSaveConfirm() {
+  saveConfirmOverlay.hidden = true;
+}
+
+btnCloseSaveConfirm.addEventListener('click', closeSaveConfirm);
+btnSkipSave.addEventListener('click', closeSaveConfirm);
+saveConfirmOverlay.addEventListener('click', (e) => {
+  if (e.target === saveConfirmOverlay) closeSaveConfirm();
+});
+btnConfirmSave.addEventListener('click', async () => {
+  await saveSessionToDisk();
+  closeSaveConfirm();
+});
+
 btnEnd.addEventListener('click', async () => {
   if (isRecording) {
     stopRecording();
     await generateSummary();
-    await saveSessionToDisk();
+    if (transcriptEntries.length) openSaveConfirm();
   } else {
     startRecording();
   }

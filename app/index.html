@@ -129,6 +129,24 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="saveConfirmOverlay" hidden>
+    <div class="modal card">
+      <div class="modal-header">
+        <h3>保存本次记录?</h3>
+        <button class="icon-btn nav-btn" id="btnCloseSaveConfirm">
+          <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint" id="saveConfirmSummary"></p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="btnSkipSave">不保存</button>
+          <button class="btn" id="btnConfirmSave">下载到本地</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" hidden></div>
 
   <script src="app.js"></script>
