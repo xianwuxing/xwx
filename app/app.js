@@ -575,9 +575,20 @@ async function segmentLoop(stream, mimeType) {
   segmentLoopActive = false;
 }
 
+// Fixed-length chunking cuts sentences mid-thought at segment boundaries, which
+// made translations of isolated chunks read as choppy/inaccurate even though
+// each chunk was translated "correctly" in isolation. Carrying a short window
+// of recent original text as context — into both the Whisper prompt and the
+// translation call — lets continuations read naturally without re-sending
+// full transcript history on every request.
+function recentOriginalContext(maxChars) {
+  return transcriptEntries.map((e) => e.original).join(' ').slice(-maxChars);
+}
+
 async function processSegment(blob) {
   const langHint = speechLangToShort(sourceLangSelect.value);
-  const text = await transcribeWithOpenAI(blob, langHint);
+  const context = recentOriginalContext(300);
+  const text = await transcribeWithOpenAI(blob, langHint, context);
   if (!text || !text.trim()) return;
   const original = text.trim();
   const entry = { time: formatDuration(currentElapsedMs()), original, translated: '翻译中…' };
@@ -586,7 +597,7 @@ async function processSegment(blob) {
   scheduleAutoSummary();
 
   try {
-    entry.translated = await translateWithOpenAI(original, targetLangLabel());
+    entry.translated = await translateWithOpenAI(original, targetLangLabel(), context);
   } catch (err) {
     console.warn('openai translate failed', err);
     entry.translated = '(翻译失败) ' + original;
@@ -594,11 +605,12 @@ async function processSegment(blob) {
   row.querySelector('.entry-translated').textContent = entry.translated;
 }
 
-async function transcribeWithOpenAI(blob, langHint) {
+async function transcribeWithOpenAI(blob, langHint, context) {
   const form = new FormData();
   form.append('file', blob, 'segment.webm');
   form.append('model', 'whisper-1');
   if (langHint && langHint !== 'auto') form.append('language', langHint);
+  if (context) form.append('prompt', context);
 
   const res = await fetch(`${OPENAI_BASE}/audio/transcriptions`, {
     method: 'POST',
@@ -613,7 +625,10 @@ async function transcribeWithOpenAI(blob, langHint) {
   return data.text || '';
 }
 
-async function translateWithOpenAI(text, targetLabel) {
+async function translateWithOpenAI(text, targetLabel, context) {
+  const userContent = context
+    ? `上下文(之前说的内容,仅供你理解语意衔接,不要翻译这部分):\n${context}\n\n现在请翻译这一句(只输出这一句的译文):\n${text}`
+    : text;
   const res = await fetch(`${OPENAI_BASE}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -624,8 +639,12 @@ async function translateWithOpenAI(text, targetLabel) {
       model: 'gpt-4o-mini',
       temperature: 0,
       messages: [
-        { role: 'system', content: `你是课堂同传翻译引擎。把用户输入的原文准确翻译成${targetLabel},只输出译文本身,不要添加任何解释、引号或多余内容。` },
-        { role: 'user', content: text },
+        {
+          role: 'system',
+          content: `你是课堂同传翻译引擎,正在连续翻译一段课堂语音的分段文本。把"现在请翻译"部分的原文准确翻译成${targetLabel},` +
+            '结合上下文让译文语意通顺、自然衔接,但只输出这一句对应的译文本身,不要输出上下文的翻译,不要添加任何解释、引号或多余内容。',
+        },
+        { role: 'user', content: userContent },
       ],
     }),
   });
